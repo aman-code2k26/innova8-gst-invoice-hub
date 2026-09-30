@@ -114,8 +114,10 @@ We wrote the GST engine, status/aging logic, reminder scheduler, invoice layout 
 We used jsPDF (PDF rendering), jspdf-autotable (tables) and qrcode (QR encoding) — commodity libraries.
 
 **Q23. How is the code organised?**
-`app/src/App.jsx` (shell + routing), `app/src/styles.css` (design system), `app/public/logic/*.js` (domain layer:
-storage → GST engine → document/PDF → views → events). Verified: syntax-clean and every DOM id resolves.
+`app/src/App.jsx` (shell + routing) · `app/src/views/*.jsx` (the six views) · `app/src/styles.css` (design system) ·
+`app/public/logic/*.js` (framework-free domain layer: storage → GST engine → invoice/PDF → reminders).
+Verified with `cd app && npm run verify`: production build + 25 headless click-through assertions, plus 43
+domain assertions on the GST, invoice and reminder maths.
 
 ---
 

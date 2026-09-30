@@ -77,24 +77,27 @@ persistence is Supabase with a localStorage fallback, and there is no server to 
 
 | Feature | What it does | Where |
 |---|---|---|
-| Business profile | Name, address, PAN, GSTIN, state + code, UPI VPA, contact, brand logo | Settings view |
-| Client address book | Client GSTIN/state/email/phone, invoice usage counter | Clients view |
-| Invoice builder | Line items with HSN/SAC, qty, hourly/fixed rate, discount, per-item GST % | New invoice view |
+| Business profile | Name, address, PAN, GSTIN, state + code, UPI VPA, contact, brand logo | `app/src/views/Settings.jsx` |
+| Client address book | Client GSTIN/state/email/phone, invoice usage counter, delete guard | `app/src/views/Clients.jsx` |
+| Invoice builder | Line items with HSN/SAC, qty, rate, discount, per-item GST %, add/remove rows | `app/src/views/Builder.jsx` |
 | **Auto GST engine** | Same state → **CGST + SGST**; other state → **IGST**; LUT toggle → **0 %** | `logic/gst.js` |
-| Live preview | Invoice re-renders on every keystroke, QR included | `app/src/views/Builder.jsx` |
-| PDF export | Indian tax-invoice layout with logo, parties, HSN, tax split, round-off | `logic/invoice.js` |
-| UPI QR + link | `upi://pay?pa&pn&am&cu&tn` with the exact payable amount | `logic/invoice.js` |
-| Status lifecycle | `DRAFT → SENT → VIEWED → PAID`, auto **OVERDUE** after due date | `logic/core.js` |
-| Aging ledger | Days-overdue per invoice + 4 dashboard KPIs + shareable payment-link card | `views/Dashboard.jsx` |
-| Reminder scheduler | Queue at **due−3 days** and **due+1 day**, stops once PAID, one-click email with amount + UPI link, audit log | Reminders view |
-| JSON backup | Export / import the whole workspace | Settings view |
+| Live preview | Invoice document re-renders on every keystroke, UPI QR included | `Builder.jsx` (debounced `qrDataUrl()` → `docHTML()`) |
+| PDF export | Indian tax-invoice layout with logo, parties, HSN, tax split, round-off | `logic/invoice.js` → `exportPDF()` / `doPrint()` |
+| UPI QR + link | `upi://pay?pa&pn&am&cu&tn` with the exact payable amount | `logic/invoice.js` → `upiUrl()` / `payLink()` / `qrDataUrl()` |
+| Payment-link card | Dashboard card with the QR + copyable `upi://` link for the top open invoice | `app/src/views/Dashboard.jsx` |
+| Status lifecycle | `DRAFT → SENT → VIEWED → PAID`, auto **OVERDUE** after due date; filter pills | `logic/core.js` → `statusOf()`, `views/Invoices.jsx` |
+| Aging ledger | Days-overdue per invoice + 4 dashboard KPIs | `logic/core.js` → `agingDays()`, `views/Dashboard.jsx` |
+| Reminder scheduler | Queue at **due−3 days** and **due+1 day**, stops once PAID, one-click email with amount + UPI link, audit log | `logic/reminders.js`, `views/Reminders.jsx` |
+| JSON backup | Export / import the whole workspace + reset to demo data | `app/src/views/Settings.jsx` |
+| Cloud sync | Push/pull/test against Supabase, auto-save 700 ms after each edit, localStorage fallback | `logic/storage.js` → `hydrate()` / `pushNow()` / `pullNow()` |
 
 **UX**
 
-- 6 views: Dashboard · Invoices · New invoice · Clients · Reminders · Settings
+- 6 views: Dashboard · Invoices · New invoice · Clients · Reminders · Settings (React SPA, no page reloads)
 - Keyboard shortcuts **`1`–`6`** jump between views (great for live demos)
-- Status filter pills, empty-state guidance, toast feedback
+- Status filter pills, empty-state guidance, toast feedback, sidebar badges for invoice / reminder counts
 - Responsive down to mobile widths; print stylesheet for a pixel-perfect paper copy
+- Verifiable: `npm run verify` rebuilds the site and re-runs the headless click-through test
 
 ---
 
@@ -296,7 +299,7 @@ Encoded as a QR (PNG data URL) → rendered in the preview, the print view **and
 | No Supabase keys / table missing | `● Local storage` chip; full functionality on localStorage |
 | Supabase unreachable | Error chip + message; local data kept, retried on next edit |
 | jsPDF CDN blocked | Automatic fallback to print-to-PDF |
-| QR library blocked | QR area shows the copyable `upi://` link |
+| QR library blocked | Falls back to the VPA + a copyable `upi://` link (invoice document and dashboard card) |
 
 ---
 
@@ -319,7 +322,9 @@ Encoded as a QR (PNG data URL) → rendered in the preview, the print view **and
    (Supabase default). Without keys configured, data never leaves the device (`localStorage` only).
 
 4. **XSS** — every user-supplied string rendered into the DOM goes through `esc()` (HTML-entity escaping);
-   no `innerHTML` is fed raw user input. Logo is stored as a data URL, not fetched from arbitrary origins.
+   React escapes every text node by default, and the one `dangerouslySetInnerHTML` call (the invoice document)
+   only ever receives output from `docHTML()`, which runs all user strings through `esc()`. Logo is stored as a
+   data URL, not fetched from arbitrary origins.
 
 5. **Dependency surface** — 4 well-known CDN libraries, pinned to exact versions, with code-level
    fallbacks if any of them fail to load. No analytics, no trackers, no third-party cookies.
@@ -361,5 +366,6 @@ Encoded as a QR (PNG data URL) → rendered in the preview, the print view **and
 | `docs/SLIDES.md` | Speaker notes for all 6 slides + pocket Q&A |
 | `docs/SUPABASE.md` | 4-minute Supabase connection guide + troubleshooting |
 | `docs/SUPABASE.sql` | `app_state` table, index, RLS policies, `updated_at` trigger |
+| `app/test/smoke.mjs` | Headless boot + click-through test of the built site (`cd app && npm test`) |
 
 **Presentation:** open `slides.html` → `←`/`→` to navigate, `P` to print 6 pages to PDF.

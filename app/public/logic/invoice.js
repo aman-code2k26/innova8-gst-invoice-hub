@@ -131,6 +131,7 @@ function docHTML(inv, qr) {
           <div class="muted small" style="font-weight:700">SCAN &amp; PAY VIA UPI</div>
           ${qr ? `<img src="${qr}" alt="UPI QR">` : '<div style="height:118px"></div>'}
           <div class="vpa small">${esc(I8.db.business.upi) || 'Add UPI ID in Settings'}</div>
+          ${qr ? '' : `<div class="vpa small" style="word-break:break-all;opacity:.75">${esc(upiUrl(inv))}</div>`}
           <div class="muted small">Amount payable: <b>${inr0(t.total)}</b></div>
         </div>
       </div>
