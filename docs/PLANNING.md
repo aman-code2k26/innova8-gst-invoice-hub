@@ -40,8 +40,8 @@ Student freelancers earn money but lose time and cash to manual, non-compliant b
 **Why:** in 32 hours the risk is un-demoable infrastructure, not architecture. The storage layer is isolated
 (`load()/save()` in `app/public/logic/storage.js`), so replacing `localStorage` with Supabase REST is a single-module change.
 
-**Libraries:** `jspdf` + `jspdf-autotable` (PDF), `qrcode` (UPI QR). Both loaded from CDN with graceful fallback
-(print-to-PDF if the CDN is unreachable).
+**Libraries:** `jspdf` + `jspdf-autotable` (PDF) from CDN with a print-to-PDF fallback; `qrcode` (UPI QR) bundled
+with the app so QR codes and payment links work offline.
 
 ## 4. Data model
 
@@ -80,7 +80,7 @@ Status is **derived** where possible: `SENT/VIEWED` + past `dueDate` ⇒ `OVERDU
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| CDN blocked at demo venue | No PDF/QR | Print-to-PDF fallback; QR degrades to a copyable `upi://` link |
+| CDN blocked at demo venue | No PDF export | Print-to-PDF fallback (QR still works — it is bundled; if the canvas fails, it degrades to a copyable `upi://` link) |
 | Wrong GST classification by judges | Credibility | Explain rules openly, show the LUT/intra/inter switch live |
 | localStorage cleared before demo | Lost data | JSON export/import button in Settings; seed demo data on first run |
 | `mailto:` blocked by browser | Reminder looks broken | Fallback: Web Share API → clipboard copy, all logged |

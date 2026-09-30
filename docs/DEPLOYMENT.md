@@ -19,7 +19,8 @@ First load seeds demo data (1 business, 2 clients, 3 invoices).
 > python3 -m http.server 8080     # from the repository root → http://localhost:8080
 > ```
 
-**Internet needed for:** PDF (jsPDF) and QR libraries from cdnjs.
+**Internet needed for:** PDF (jsPDF) from cdnjs, and Supabase (only if cloud sync is switched on). The
+QR generator is bundled with the app, so payment links work offline.
 **Without internet:** the app still works — PDF falls back to the browser print dialog,
 and the QR area shows the copyable `upi://pay` link.
 

@@ -60,7 +60,7 @@ who paid, and awkward follow-ups. Innova8 closes that loop in one screen:
 | Styling | Hand-written CSS design system (`app/src/styles.css`, custom properties, responsive) | No framework weight; full control of the invoice document styling |
 | Domain logic | Framework-free JavaScript modules on `window.I8` (`logic/*.js`, classic `<script>` tags) | Keeps GST/PDF/reminder logic testable without the UI framework |
 | PDF | **jsPDF 2.5.1** + **jspdf-autotable** (CDN) with a print-to-PDF stylesheet fallback | Client-side generation → milliseconds, meets the "< 1 sec" requirement |
-| QR | **qrcode 1.5.3** (CDN) → PNG data URL | Standard `upi://pay` payload, works with every UPI app |
+| QR | **qrcode** (npm, bundled with the app) → PNG data URL | Standard `upi://pay` payload, works with every UPI app; no CDN |
 | Database | **Supabase Postgres** (cloud sync) with **localStorage** fallback | Works with or without keys; swap is one config file |
 | Supabase client | `@supabase/supabase-js` v2 (UMD via CDN) | Single `<script>`, no bundler |
 | Hosting | **GitHub Pages** (live), also Vercel / Netlify / any static server | Free, instant, custom-domain capable |
@@ -288,9 +288,11 @@ upi://pay?pa=<vpa>&pn=<payee>&am=<total>&cu=INR&tn=<invoice no>
 
 Encoded as a QR (PNG data URL) → rendered in the preview, the print view **and** the PDF.
 
-### 3. External libraries (CDN, load-time only)
+### 3. External libraries
 
-`jspdf@2.5.1` · `jspdf-autotable@3.8.2` · `qrcode@1.5.3` · `@supabase/supabase-js@2.45.4`
+**CDN, load-time only:** `jspdf@2.5.1` · `jspdf-autotable@3.8.2` · `@supabase/supabase-js@2.45.4`
+
+**Bundled with the app (no network):** `qrcode` (draws the UPI QR into a canvas → PNG data URL)
 
 ### 4. Graceful degradation
 
@@ -299,7 +301,7 @@ Encoded as a QR (PNG data URL) → rendered in the preview, the print view **and
 | No Supabase keys / table missing | `● Local storage` chip; full functionality on localStorage |
 | Supabase unreachable | Error chip + message; local data kept, retried on next edit |
 | jsPDF CDN blocked | Automatic fallback to print-to-PDF |
-| QR library blocked | Falls back to the VPA + a copyable `upi://` link (invoice document and dashboard card) |
+| Canvas unavailable (QR can't be drawn) | Falls back to the VPA + a copyable `upi://` link (invoice document and dashboard card) |
 
 ---
 
@@ -326,8 +328,9 @@ Encoded as a QR (PNG data URL) → rendered in the preview, the print view **and
    only ever receives output from `docHTML()`, which runs all user strings through `esc()`. Logo is stored as a
    data URL, not fetched from arbitrary origins.
 
-5. **Dependency surface** — 4 well-known CDN libraries, pinned to exact versions, with code-level
-   fallbacks if any of them fail to load. No analytics, no trackers, no third-party cookies.
+5. **Dependency surface** — 3 well-known CDN libraries, pinned to exact versions, with code-level
+   fallbacks if any of them fail to load (plus `qrcode` bundled locally). No analytics, no trackers, no
+   third-party cookies.
 
 6. **Reminders** — use `mailto:` with an encoded subject/body (never raw shell/email headers);
    fallback chain is Web Share → clipboard. No server-side mail relay is running, so no mail credentials exist.

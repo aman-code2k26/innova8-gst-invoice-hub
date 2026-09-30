@@ -1,7 +1,12 @@
 import { createRoot } from 'react-dom/client';
+import QRCode from 'qrcode';
 import './styles.css';
 import App from './App.jsx';
 import { loadRuntime } from './runtime.js';
+
+/* qrcode ships inside the bundle (the old CDN URL 404'd, so no QR could be drawn);
+   the logic layer expects a global QRCode with .toDataURL() */
+window.QRCode = QRCode;
 
 function fatal(message) {
   const root = document.getElementById('root');

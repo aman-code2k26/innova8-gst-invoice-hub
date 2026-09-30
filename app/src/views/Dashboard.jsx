@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { Empty } from '../components/ui.jsx';
 import { invoiceAction, clientName } from '../actions.js';
 
+/* payment methods a client can scan the QR / open the link with */
+const PAY_METHODS = ['UPI', 'GPay', 'PhonePe', 'Paytm'];
+
 export default function Dashboard({ go, openPreview }) {
   const db = I8.db;
   const live = db.invoices.filter(i => i.status !== 'DRAFT');
@@ -163,7 +166,7 @@ export default function Dashboard({ go, openPreview }) {
 
 /* FR-4 — the invoice link that can be shared as-is, plus a scannable UPI QR */
 function PaymentCard({ invoices }) {
-  const [qr, setQr] = useState('');
+  const [qr, setQr] = useState(null); // null = generating, '' = unavailable, string = data URL
   const target = invoices[0] || null;
   const hasUpi = !!I8.db.business.upi;
   const link = target && hasUpi ? I8.payLink(I8.calc(target).total, `Payment for ${target.number}`) : '';
@@ -171,6 +174,7 @@ function PaymentCard({ invoices }) {
   useEffect(() => {
     let alive = true;
     if (!link) { setQr(''); return; }
+    setQr(null);
     I8.qrDataUrl(link).then(u => { if (alive) setQr(u); });
     return () => { alive = false; };
   }, [link]);
@@ -211,20 +215,41 @@ function PaymentCard({ invoices }) {
               textAlign: 'center'
             }}
           >
-            {qr ? (
-              <img src={qr} alt="UPI QR" style={{ width: 148, height: 148, display: 'block' }} />
-            ) : (
+            {qr === null ? (
               <div style={{ width: 148, height: 148, display: 'grid', placeItems: 'center', color: 'var(--muted)' }}>
                 generating…
               </div>
+            ) : qr ? (
+              <img src={qr} alt="UPI QR" style={{ width: 148, height: 148, display: 'block' }} />
+            ) : (
+              <div
+                title="QR unavailable — use the payment link below"
+                style={{
+                  width: 148, height: 148, display: 'grid', placeItems: 'center',
+                  borderRadius: 12, background: 'linear-gradient(135deg,#0b7285,#12b886)', color: '#fff'
+                }}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 34, fontWeight: 800, lineHeight: 1 }}>₹</div>
+                  <div style={{ fontSize: 11, letterSpacing: '.14em', marginTop: 4 }}>UPI</div>
+                </div>
+              </div>
             )}
             <div className="muted small" style={{ marginTop: 6 }}>{I8.inr0(I8.calc(target).total)}</div>
+            <div className="row gap" style={{ marginTop: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+              {PAY_METHODS.map(m => (
+                <span className="chip" key={m} style={{ fontSize: 11, padding: '3px 9px' }}>{m}</span>
+              ))}
+            </div>
           </div>
 
           <div style={{ flex: 1, minWidth: 240 }}>
             <div className="row-item" style={{ display: 'block' }}>
               <div className="t">Scan or share this link to get paid</div>
               <div className="s" style={{ wordBreak: 'break-all', marginTop: 6 }}>{link}</div>
+              <div className="muted small" style={{ marginTop: 8 }}>
+                Client can pay with {PAY_METHODS.slice(1).join(' · ')} or any UPI app
+              </div>
               <div className="row gap" style={{ marginTop: 12 }}>
                 <button
                   className="btn sm primary"

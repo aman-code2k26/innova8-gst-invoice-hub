@@ -93,7 +93,9 @@ Everything is in-memory DOM updates; the PDF and QR are generated in millisecond
 No framework hydration, no API waits.
 
 **Q19. Browser support / offline?**
-Chrome, Edge, Safari (desktop). Works offline except the two CDN libraries, which degrade gracefully.
+Chrome, Edge, Safari (desktop). Works offline except for jsPDF (PDF export) and supabase-js (cloud sync only) —
+both degrade gracefully (print-to-PDF, localStorage). The QR generator is bundled with the app, so payment links
+and QR codes work without internet.
 
 ---
 
