@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Innova8 · WEB-06 · 6 Slide Deck</title>
+<style>
+  :root{
+    --ink:#0b1220; --paper:#ffffff; --brand:#4f46e5; --brand2:#22d3ee;
+    --muted:#94a3b8; --line:rgba(255,255,255,.14); --ok:#34d399; --warn:#fbbf24;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#05070f;color:#e2e8f0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;overflow:hidden}
+  .deck{height:100vh;position:relative}
+  .slide{
+    position:absolute;inset:0;padding:5vh 7vw;display:none;flex-direction:column;justify-content:center;
+    animation:fade .35s ease;
+  }
+  .slide.active{display:flex}
+  @keyframes fade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  .kicker{font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--brand2);font-weight:700}
+  h1{font-size:clamp(30px,4.6vw,62px);line-height:1.05;margin:.25em 0 .1em;letter-spacing:-.02em}
+  h2{font-size:clamp(24px,3.2vw,44px);margin:.1em 0 .5em;letter-spacing:-.02em}
+  .lead{font-size:clamp(15px,1.5vw,21px);color:#cbd5e1;max-width:62ch;line-height:1.55}
+  .muted{color:var(--muted)}
+  .brandline{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+  .tag{border:1px solid var(--line);border-radius:99px;padding:5px 13px;font-size:12.5px;font-weight:700;color:#c7d2fe;background:rgba(79,70,229,.18)}
+  .tag.ok{color:#a7f3d0;background:rgba(52,211,153,.14);border-color:rgba(52,211,153,.3)}
+  .tag.warn{color:#fde68a;background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.3)}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:14px}
+  .cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:14px}
+  .card{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+  .card h3{margin:0 0 8px;font-size:17px;display:flex;gap:9px;align-items:center}
+  .card p,.card li{font-size:14.5px;line-height:1.6;color:#cbd5e1;margin:.25em 0}
+  .card ul{margin:.3em 0;padding-left:18px}
+  .fr{font-size:11.5px;font-weight:800;background:var(--brand);color:#fff;border-radius:6px;padding:3px 7px;letter-spacing:.04em}
+  .big{font-size:clamp(26px,3vw,40px);font-weight:800;letter-spacing:-.02em;color:#fff}
+  .k{font-size:12.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700}
+
+  .flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .step{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:11px 15px;font-size:14px;font-weight:600}
+  .step.active{background:linear-gradient(135deg,var(--brand),#7c3aed);border-color:transparent;color:#fff}
+  .arrow{color:var(--brand2);font-weight:800}
+
+  table{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:8px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  td b{color:#fff}
+
+  .pillrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+  .pill{border:1px solid var(--line);border-radius:99px;padding:7px 14px;font-size:13.5px;color:#cbd5e1}
+  .pill b{color:#fff}
+
+  /* chrome */
+  .progress{position:fixed;top:0;left:0;height:4px;background:linear-gradient(90deg,var(--brand),var(--brand2));z-index:9;transition:width .3s}
+  .hud{position:fixed;bottom:16px;left:0;right:0;display:flex;justify-content:space-between;align-items:center;
+    padding:0 26px;font-size:13px;color:var(--muted);z-index:9}
+  .dots{display:flex;gap:8px}
+  .dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.22);cursor:pointer}
+  .dot.on{background:var(--brand2);transform:scale(1.25)}
+  .nav{display:flex;gap:8px}
+  .nav button{background:rgba(255,255,255,.07);border:1px solid var(--line);color:#e2e8f0;
+    border-radius:9px;padding:7px 13px;cursor:pointer;font-size:14px}
+  .nav button:hover{background:rgba(255,255,255,.14)}
+  .foot-note{margin-top:16px;font-size:13px;color:var(--muted)}
+  .logo{font-weight:900;font-size:20px;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+
+  @media(max-width:860px){.cols,.cols3{grid-template-columns:1fr}.slide{padding:5vh 6vw}}
+  @media print{
+    html,body{overflow:visible;background:#fff}
+    .slide{display:flex !important;position:relative;height:100vh;page-break-after:always;color:#0b1220}
+    .card{background:#f8fafc;border-color:#e2e8f8}
+    .card p,.card li,.lead,.pill{color:#334155}
+    .hud,.progress{display:none}
+    th{color:#64748b}td b,h1,h2,.big,.kicker{color:#0b1220}
+    .tag{color:#4338ca;background:#eef2ff}
+    .step{background:#f1f5f9;border-color:#e2e8f0;color:#0b1220}
+    .step.active{background:#4f46e5;color:#fff}
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="bar"></div>
+<div class="deck" id="deck">
+
+  <!-- ================= SLIDE 1 ================= -->
+  <section class="slide active">
+    <div class="brandline">
+      <span class="logo">Innova8</span>
+      <span class="tag">BBIT HACKATHON 2026</span>
+      <span class="tag">WEB-06</span>
+      <span class="tag warn">Level 2 · Intermediate · 32 Hours</span>
+    </div>
+    <div class="kicker">Problem Statement</div>
+    <h1>Micro-SaaS GST Invoice &amp;<br>Payment Link Hub</h1>
+    <p class="lead">for <b>Student Freelancers</b> — generate GST-compliant PDF bills, embed a UPI QR for
+      instant payment, track every invoice's status, and never forget a follow-up again.</p>
+
+    <div class="cols3">
+      <div class="card">
+        <div class="k">The real-world pain</div>
+        <p>Students doing freelance work bill clients on chat, forget GST math, and chase payments manually.</p>
+      </div>
+      <div class="card">
+        <div class="k">What we built</div>
+        <p>One clean web app that does <b>billing → PDF → UPI collection → follow-up</b> end to end.</p>
+      </div>
+      <div class="card">
+        <div class="k">Why it matters</div>
+        <p>Solves a <b>cash-flow bottleneck</b>: money earned actually reaches the freelancer, on time.</p>
+      </div>
+    </div>
+
+    <div class="foot-note">Team Innova8 · Presentation ≈ 6 slides · Demo runs live in the browser</div>
+  </section>
+
+  <!-- ================= SLIDE 2 ================= -->
+  <section class="slide">
+    <div class="kicker">Slide 2 · Who &amp; Why</div>
+    <h2>Target users, core problem &amp; our solution</h2>
+
+    <div class="cols">
+      <div class="card">
+        <h3>👥 Who uses it</h3>
+        <ul>
+          <li><b>Student freelancers</b> — design, dev, writing gigs</li>
+          <li><b>Gig-economy workers</b> — short contracts, fast payouts</li>
+          <li><b>Boutique digital agencies</b> — small teams, many clients</li>
+          <li><b>Campus consultants</b> — projects with college/brand clients</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>😣 The core problem</h3>
+        <ul>
+          <li>No professional invoice → clients take you less seriously</li>
+          <li>GST / LUT maths done by hand → wrong tax, audit risk</li>
+          <li>No record of who paid → <b>unpaid invoices pile up</b></li>
+          <li>Follow-up feels awkward → payments get delayed</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <h3>✅ Our solution in one line</h3>
+      <div class="flow">
+        <div class="step active">Set up profile</div><span class="arrow">→</span>
+        <div class="step">Build invoice</div><span class="arrow">→</span>
+        <div class="step">PDF + UPI QR</div><span class="arrow">→</span>
+        <div class="step">Send to client</div><span class="arrow">→</span>
+        <div class="step">Auto reminder</div><span class="arrow">→</span>
+        <div class="step">Paid ✓</div>
+      </div>
+      <p class="muted" style="font-size:14px;margin-top:12px">
+        This same 6-step flow is the <b>live demo script</b> we will walk through after the slides.</p>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 3 ================= -->
+  <section class="slide">
+    <div class="kicker">Slide 3 · Features (1 of 2)</div>
+    <h2>FR-1 → FR-3: Setup, smart billing &amp; PDF</h2>
+
+    <div class="cols3">
+      <div class="card">
+        <h3><span class="fr">FR-1</span> Profile &amp; clients</h3>
+        <ul>
+          <li>Save business name, <b>PAN, GSTIN</b>, address</li>
+          <li>Store bank <b>UPI ID</b> for payments</li>
+          <li>Client address book with GSTIN + state</li>
+        </ul>
+        <p class="muted">Demo: Settings → save profile → Clients → add a client.</p>
+      </div>
+      <div class="card">
+        <h3><span class="fr">FR-2</span> Invoice builder</h3>
+        <ul>
+          <li>Line items: qty, hourly/fixed rate, discount</li>
+          <li>Auto <b>CGST+SGST</b> (same state) vs <b>IGST</b> (other state)</li>
+          <li><b>LUT</b> toggle → 0% GST for exports</li>
+          <li>HSN/SAC codes, round-off, live totals</li>
+        </ul>
+        <p class="muted">Demo: change client state, watch tax type flip automatically.</p>
+      </div>
+      <div class="card">
+        <h3><span class="fr">FR-3</span> PDF generator</h3>
+        <ul>
+          <li>One click → <b>downloadable PDF</b> with your logo</li>
+          <li>Indian tax-invoice layout: parties, HSN, split tax</li>
+          <li>Generates in <b>&lt; 1 second</b> (requirement)</li>
+        </ul>
+        <p class="muted">Demo: Save &amp; download PDF → open the file on stage.</p>
+      </div>
+    </div>
+
+    <div class="pillrow">
+      <span class="pill"><b>Non-functional:</b> GST-compliant format</span>
+      <span class="pill"><b>&lt; 1 sec</b> PDF generation</span>
+      <span class="pill"><b>Bank-grade</b> protection of banking details</span>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 4 ================= -->
+  <section class="slide">
+    <div class="kicker">Slide 4 · Features (2 of 2)</div>
+    <h2>FR-4 → FR-6: Get paid, track, follow up</h2>
+
+    <div class="cols3">
+      <div class="card">
+        <h3><span class="fr">FR-4</span> UPI QR / payment link</h3>
+        <ul>
+          <li>Dynamic <b>upi://pay</b> link with the exact amount</li>
+          <li>QR embedded <b>on the invoice PDF</b></li>
+          <li>Client scans → pays in seconds, no bank details shared</li>
+        </ul>
+        <p class="muted">Demo: scan the QR on screen with any UPI app.</p>
+      </div>
+      <div class="card">
+        <h3><span class="fr">FR-5</span> Status &amp; aging ledger</h3>
+        <div class="flow" style="margin-top:4px">
+          <div class="step" style="padding:7px 10px;font-size:12.5px">DRAFT</div><span class="arrow">→</span>
+          <div class="step" style="padding:7px 10px;font-size:12.5px">SENT</div><span class="arrow">→</span>
+          <div class="step" style="padding:7px 10px;font-size:12.5px">VIEWED</div><span class="arrow">→</span>
+          <div class="step" style="padding:7px 10px;font-size:12.5px">PAID</div>
+        </div>
+        <ul style="margin-top:8px">
+          <li>Auto flips to <b>OVERDUE</b> after the due date</li>
+          <li>Dashboard shows <b>days overdue</b> per invoice</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="fr">FR-6</span> Reminder scheduler</h3>
+        <ul>
+          <li>Reminder due <b>3 days before</b> the due date</li>
+          <li>And <b>1 day after</b> the due date</li>
+          <li>One-click email with amount + UPI link</li>
+          <li>Stops automatically once <b>PAID</b></li>
+        </ul>
+        <p class="muted">Demo: Reminders → queue → Send reminder.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 5 ================= -->
+  <section class="slide">
+    <div class="kicker">Slide 5 · Technology</div>
+    <h2>How it is built</h2>
+
+    <div class="cols">
+      <div class="card">
+        <h3>🛠 Stack</h3>
+        <table>
+          <tr><th>Layer</th><th>Choice</th></tr>
+          <tr><td>Frontend</td><td><b>HTML + CSS + JavaScript</b> (SPA, zero build)</td></tr>
+          <tr><td>PDF</td><td><b>jsPDF + autotable</b>, print fallback</td></tr>
+          <tr><td>QR</td><td><b>qrcode</b> library → UPI payload</td></tr>
+          <tr><td>Data</td><td><b>localStorage</b> now → <b>Supabase (Postgres)</b> next</td></tr>
+          <tr><td>Hosting</td><td>Any static host / <b>Vercel</b></td></tr>
+        </table>
+        <p class="muted" style="font-size:13.5px">Handbook recommends React/Next + Supabase — we kept full
+          technical freedom and chose the stack that ships fastest in 32 hours.</p>
+      </div>
+      <div class="card">
+        <h3>⚙ GST logic (the smart part)</h3>
+        <div class="flow">
+          <div class="step">Client state</div><span class="arrow">vs</span>
+          <div class="step">Your state</div><span class="arrow">→</span>
+          <div class="step active">Same? CGST+SGST</div>
+          <div class="step">Different? IGST</div>
+          <div class="step">Export? LUT 0%</div>
+        </div>
+        <ul style="margin-top:12px">
+          <li>Taxable = qty × rate − discount</li>
+          <li>GST = taxable × rate (5 / 12 / 18 / 28%)</li>
+          <li>Grand total rounded to nearest rupee, difference shown as <b>round-off</b></li>
+          <li>Amount goes into the UPI QR automatically</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="pillrow">
+      <span class="pill">Pages: <b>Dashboard</b> · <b>Invoices</b> · <b>New invoice</b> · <b>Clients</b> · <b>Reminders</b> · <b>Settings</b></span>
+      <span class="pill">Shortcut keys <b>1–6</b> jump between pages</span>
+      <span class="pill">Export / import <b>JSON backup</b></span>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 6 ================= -->
+  <section class="slide">
+    <div class="kicker">Slide 6 · Wrap-up</div>
+    <h2>Demo, documentation &amp; why we score</h2>
+
+    <div class="cols">
+      <div class="card">
+        <h3>🎬 90-second demo script</h3>
+        <ul>
+          <li>1. Show <b>Settings</b> — business + PAN/GSTIN + UPI ID</li>
+          <li>2. Add a <b>client in another state</b> → tax flips to IGST</li>
+          <li>3. Build an invoice → totals + QR update <b>live</b></li>
+          <li>4. <b>Download PDF</b> → open it, scan the QR</li>
+          <li>5. Mark paid / open <b>aging ledger</b> → overdue days</li>
+          <li>6. Open <b>Reminders</b> → send a follow-up in one click</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>📦 Required documentation (submitted)</h3>
+        <ul>
+          <li><b>README.md</b> — problem, features, how to run</li>
+          <li><b>docs/PLANNING.md</b> — scope, milestones, risk</li>
+          <li><b>docs/PROGRESS.md</b> — 32-hour log</li>
+          <li><b>docs/DEPLOYMENT.md</b> — hosting steps</li>
+          <li><b>docs/DEFENSE_QA.md</b> — anticipated judge Q&amp;A</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cols3" style="margin-top:16px">
+      <div class="card"><div class="k">Completeness</div><div class="big">6 / 6</div><p>All functional requirements implemented end to end.</p></div>
+      <div class="card"><div class="k">UX &amp; Design</div><div class="big">Live</div><p>Instant preview, one-screen flows, keyboard shortcuts.</p></div>
+      <div class="card"><div class="k">Commercial viability</div><div class="big">₹ Real</div><p>Students already face this exact billing problem today.</p></div>
+    </div>
+
+    <div class="foot-note">Future scope → email API (Resend) for truly automated reminders, Supabase auth + RLS,
+      payment gateway reconciliation, multi-currency &amp; e-invoice (IRN) support.</div>
+  </section>
+
+</div>
+
+<div class="hud">
+  <div class="dots" id="dots"></div>
+  <div class="nav">
+    <button id="prev" title="← ">‹ Prev</button>
+    <button id="next" title="→ ">Next ›</button>
+    <button id="printBtn" title="Print / PDF">⎙ Print</button>
+  </div>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  let i = 0;
+  const dots = document.getElementById('dots');
+  slides.forEach((_, n) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (n === 0 ? ' on' : '');
+    d.onclick = () => go(n);
+    dots.appendChild(d);
+  });
+  function go(n){
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    Array.from(dots.children).forEach((d, k) => d.classList.toggle('on', k === i));
+    document.getElementById('bar').style.width = ((i + 1) / slides.length * 100) + '%';
+  }
+  document.getElementById('next').onclick = () => go(i + 1);
+  document.getElementById('prev').onclick = () => go(i - 1);
+  document.getElementById('printBtn').onclick = () => window.print();
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','PageDown',' '].includes(e.key)) { e.preventDefault(); go(i + 1); }
+    if (['ArrowLeft','PageUp'].includes(e.key)) { e.preventDefault(); go(i - 1); }
+    if (e.key === 'Home') go(0);
+    if (e.key === 'End') go(slides.length - 1);
+    if (e.key.toLowerCase() === 'p') window.print();
+  });
+  let x0 = null;
+  document.addEventListener('touchstart', e => x0 = e.touches[0].clientX);
+  document.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 60) go(dx < 0 ? i + 1 : i - 1);
+    x0 = null;
+  });
+  go(0);
+</script>
+</body>
+</html>
