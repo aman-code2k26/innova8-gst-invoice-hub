@@ -28,7 +28,7 @@ Row Level Security with a demo policy, and a trigger that keeps `updated_at` fre
 
 ## Step 3 — Put the keys in the app
 
-Open `src/js/supabase-config.js` and fill in the two values:
+Open `app/public/logic/supabase-config.js` and fill in the two values:
 
 ```js
 window.SUPABASE_CONFIG = {
@@ -96,7 +96,7 @@ exists — that is step 1 of the v2 plan in `docs/PROGRESS.md`.
 | `Invalid API key` | Wrong key — re-copy **anon public**, not `service_role` |
 | `Row-level security` / permission denied | The demo policy was removed — re-run the SQL file |
 | Data not appearing after edits | Wait 0.7 s (debounce), or click **Push data to Supabase** |
-| Works on `file://` but not after deploying | Deployment serves an old copy — redeploy `src/` |
+| Works on `file://` but not after deploying | Deployment serves an old copy — redeploy (push `index.html`, `assets/`, `logic/`) |
 
 ## Rollback
 

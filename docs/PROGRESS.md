@@ -6,12 +6,12 @@ Live log of what was built, in build order. Tick = demoable.
 
 | Req | Title | Status | Where |
 |---|---|---|---|
-| FR-1 | Client & business profile setup | ✅ Done | `src/js/app.js` → `renderSettings()`, `renderClients()` |
-| FR-2 | Dynamic invoice builder + auto GST | ✅ Done | `renderBuilder()`, `calc()`, `gstBreakdown()` |
-| FR-3 | PDF invoice generator with logo | ✅ Done | `exportPDF()`, `printInvoice()` |
-| FR-4 | UPI QR / payment link | ✅ Done | `upiUrl()`, `qrDataUrl()` |
-| FR-5 | Status & aging ledger | ✅ Done | `statusOf()`, `agingDays()`, Dashboard |
-| FR-6 | Overdue reminder scheduler | ✅ Done | `reminderPlan()`, `queue()`, `sendReminder()` |
+| FR-1 | Client & business profile setup | ✅ Done | `app/src/views/Settings.jsx`, `views/Clients.jsx` |
+| FR-2 | Dynamic invoice builder + auto GST | ✅ Done | `views/Builder.jsx`, `logic/gst.js` |
+| FR-3 | PDF invoice generator with logo | ✅ Done | `logic/invoice.js` → `exportPDF()`, `printInvoice()` |
+| FR-4 | UPI QR / payment link | ✅ Done | `logic/invoice.js` → `upiUrl()`, `payLink()`, `qrDataUrl()` + dashboard payment card |
+| FR-5 | Status & aging ledger | ✅ Done | `logic/core.js` → `statusOf()`, `agingDays()`, `views/Dashboard.jsx` |
+| FR-6 | Overdue reminder scheduler | ✅ Done | `logic/reminders.js` → `reminderPlan()`, `queue()`, `sendReminder()` |
 | Docs | 5 documentation artefacts | ✅ Done | `README.md`, `docs/*` |
 | — | 6-slide deck + speaker notes | ✅ Done | `slides.html`, `docs/SLIDES.md` |
 
@@ -56,6 +56,16 @@ Live log of what was built, in build order. Tick = demoable.
 ### Hour 29–32 · QA, docs, deck
 - Syntax check on `app.js`, cross-checked every `$('#id')` against `index.html` (0 missing).
 - Wrote `docs/DEPLOYMENT.md`, `docs/DEFENSE_QA.md`, `slides.html` (6 slides) and `docs/SLIDES.md`.
+
+### React migration (UI rewrite, same feature set)
+- Split the 1000-line `app.js` into framework-free domain modules: `core` · `storage` · `gst` · `invoice` · `reminders`
+  (`window.I8`, classic scripts — unit-tested headless: 43 assertions passing).
+- Rebuilt the six views as React components in `app/` (Vite, React 18); React subscribes to the store through
+  `I8.subscribe()` so every `save()` re-renders exactly once.
+- Build outputs land at the repository root (`index.html`, `assets/`, `logic/`) so GitHub Pages keeps serving `main`.
+- Added a headless smoke test (`app/test/smoke.mjs`) that boots the real build in jsdom and clicks through all six
+  views — 25 assertions passing (`npm run verify`).
+- New FR-4 dashboard card: shareable `upi://` payment link + scannable QR for the top open invoice.
 
 ## Known limitations (declared honestly)
 1. Reminders are *scheduled automatically* but sent on click (no server cron yet) — v2 wires an email API.

@@ -38,7 +38,7 @@ Student freelancers earn money but lose time and cash to manual, non-compliant b
 | **Zero-build SPA (HTML/CSS/JS) + localStorage** | Runs anywhere, instant demo, no install, static-hostable | No server-side automation yet | **Chosen** |
 
 **Why:** in 32 hours the risk is un-demoable infrastructure, not architecture. The storage layer is isolated
-(`load()/save()` in `src/js/app.js`), so replacing `localStorage` with Supabase REST is a single-module change.
+(`load()/save()` in `app/public/logic/storage.js`), so replacing `localStorage` with Supabase REST is a single-module change.
 
 **Libraries:** `jspdf` + `jspdf-autotable` (PDF), `qrcode` (UPI QR). Both loaded from CDN with graceful fallback
 (print-to-PDF if the CDN is unreachable).

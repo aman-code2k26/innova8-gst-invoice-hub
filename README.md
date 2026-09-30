@@ -56,8 +56,9 @@ who paid, and awkward follow-ups. Innova8 closes that loop in one screen:
 
 | Layer | Choice | Why |
 |---|---|---|
-| Frontend | **HTML + CSS + vanilla JavaScript** (SPA, no build step) | Cannot fail on installs/env during a live demo; deploys to any static host |
-| Styling | Hand-written CSS design system (`styles.css`, CSS custom properties, responsive) | No framework weight; full control of the invoice document styling |
+| Frontend | **React 18 + Vite** (source in `app/`, built to static files at the repo root) | Matches the handbook's recommended stack; one component per view |
+| Styling | Hand-written CSS design system (`app/src/styles.css`, custom properties, responsive) | No framework weight; full control of the invoice document styling |
+| Domain logic | Framework-free JavaScript modules on `window.I8` (`logic/*.js`, classic `<script>` tags) | Keeps GST/PDF/reminder logic testable without the UI framework |
 | PDF | **jsPDF 2.5.1** + **jspdf-autotable** (CDN) with a print-to-PDF stylesheet fallback | Client-side generation → milliseconds, meets the "< 1 sec" requirement |
 | QR | **qrcode 1.5.3** (CDN) → PNG data URL | Standard `upi://pay` payload, works with every UPI app |
 | Database | **Supabase Postgres** (cloud sync) with **localStorage** fallback | Works with or without keys; swap is one config file |
@@ -65,8 +66,8 @@ who paid, and awkward follow-ups. Innova8 closes that loop in one screen:
 | Hosting | **GitHub Pages** (live), also Vercel / Netlify / any static server | Free, instant, custom-domain capable |
 | Presentation | `slides.html` (6 slides, keyboard nav, print-to-PDF) | No PowerPoint needed |
 
-*The handbook recommends React/Next.js + Supabase + Express and explicitly allows any modern stack —
-this choice optimises for demo reliability inside a 32-hour window (see `docs/PLANNING.md` §3).*
+*The handbook recommends React/Next.js + Supabase and explicitly allows any modern stack: the UI is React,
+persistence is Supabase with a localStorage fallback, and there is no server to deploy (see `docs/PLANNING.md` §3).*
 
 ---
 
@@ -79,12 +80,12 @@ this choice optimises for demo reliability inside a 32-hour window (see `docs/PL
 | Business profile | Name, address, PAN, GSTIN, state + code, UPI VPA, contact, brand logo | Settings view |
 | Client address book | Client GSTIN/state/email/phone, invoice usage counter | Clients view |
 | Invoice builder | Line items with HSN/SAC, qty, hourly/fixed rate, discount, per-item GST % | New invoice view |
-| **Auto GST engine** | Same state → **CGST + SGST**; other state → **IGST**; LUT toggle → **0 %** | `calc()`, `gstBreakdown()` |
-| Live preview | Invoice re-renders on every keystroke, QR included | `refreshBuilder()` |
-| PDF export | Indian tax-invoice layout with logo, parties, HSN, tax split, round-off | `exportPDF()` / `printInvoice()` |
-| UPI QR + link | `upi://pay?pa&pn&am&cu&tn` with the exact payable amount | `upiUrl()`, `qrDataUrl()` |
-| Status lifecycle | `DRAFT → SENT → VIEWED → PAID`, auto **OVERDUE** after due date | `statusOf()` |
-| Aging ledger | Days-overdue per invoice + 4 dashboard KPIs | Dashboard view |
+| **Auto GST engine** | Same state → **CGST + SGST**; other state → **IGST**; LUT toggle → **0 %** | `logic/gst.js` |
+| Live preview | Invoice re-renders on every keystroke, QR included | `app/src/views/Builder.jsx` |
+| PDF export | Indian tax-invoice layout with logo, parties, HSN, tax split, round-off | `logic/invoice.js` |
+| UPI QR + link | `upi://pay?pa&pn&am&cu&tn` with the exact payable amount | `logic/invoice.js` |
+| Status lifecycle | `DRAFT → SENT → VIEWED → PAID`, auto **OVERDUE** after due date | `logic/core.js` |
+| Aging ledger | Days-overdue per invoice + 4 dashboard KPIs + shareable payment-link card | `views/Dashboard.jsx` |
 | Reminder scheduler | Queue at **due−3 days** and **due+1 day**, stops once PAID, one-click email with amount + UPI link, audit log | Reminders view |
 | JSON backup | Export / import the whole workspace | Settings view |
 
@@ -101,7 +102,11 @@ this choice optimises for demo reliability inside a 32-hour window (see `docs/PL
 
 ```
 innova8-gst-invoice-hub/
-├── index.html                  ← landing redirect → src/index.html (GitHub Pages entry)
+├── index.html                  ← built React app (GitHub Pages entry)
+├── assets/                     ← bundled JS + CSS (hashed, generated)
+├── logic/                      ← runtime domain modules (generated from app/public/logic)
+│   ├── core.js · storage.js · gst.js · invoice.js · reminders.js
+│   └── supabase-config.js      ← Project URL + anon key (the only config file)
 ├── slides.html                 ← 6-slide deck (← → keys, P = print)
 ├── README.md                   ← this file
 ├── .gitignore
@@ -114,60 +119,64 @@ innova8-gst-invoice-hub/
 │   ├── SLIDES.md               ← slide-by-slide speaker notes
 │   ├── SUPABASE.md             ← 4-minute Supabase setup guide
 │   └── SUPABASE.sql            ← schema: app_state + RLS + trigger
-└── src/
-    ├── index.html              ← the application (open this)
-    ├── css/styles.css          ← design system + print stylesheet
-    └── js/
-        ├── app.js              ← all business logic (FR-1 … FR-6)
-        └── supabase-config.js  ← Project URL + anon key (the only config file)
+└── app/                        ← React source (Vite)
+    ├── package.json · vite.config.js · index.html
+    ├── test/smoke.mjs          ← headless boot + click-through test (npm test)
+    ├── public/logic/           ← source of truth for ../logic/*.js
+    └── src/
+        ├── main.jsx            ← loads the logic modules, then mounts React
+        ├── App.jsx             ← shell, sidebar, routing, keyboard 1–6, boot
+        ├── useI8.js            ← subscribes React to the I8 store
+        ├── actions.js          ← shared invoice / client actions
+        ├── styles.css          ← design system + print stylesheet
+        └── views/              ← Dashboard · Invoices · Builder · Clients · Reminders · Settings
 ```
 
-**Code map inside `src/js/app.js` (single module, ~950 lines):**
+**Domain layer — `app/public/logic/*.js` (served from `/logic`, framework-free):**
 
-| Section | Responsibilities |
+| File | Responsibilities |
 |---|---|
-| Storage | `load() / save() / seed()` (localStorage) · `hydrate() / pushNow() / pullNow()` (Supabase) |
-| GST engine | `resolveGstType() · rateFor() · calc() · gstBreakdown()` |
-| Document | `docHTML()` (preview + print) · `exportPDF()` (jsPDF) · `doPrint()` |
-| Payments | `upiUrl() · qrDataUrl()` |
-| Ledger | `statusOf() · agingDays() · renderDashboard()` |
-| Reminders | `reminderPlan() · queue() · sendReminder()` |
-| UI | `go() · render*() · bind()` (event delegation, keys 1–6) |
+| `core.js` | constants · `esc() · inr() · statusOf() · agingDays() · toast()` |
+| `storage.js` | `load() / save() / seed()` (localStorage) · `hydrate() / pushNow() / pullNow()` (Supabase) · `subscribe()` store |
+| `gst.js` | `resolveGstType() · rateFor() · calc() · gstBreakdown()` |
+| `invoice.js` | `docHTML() · exportPDF() · doPrint()` · `upiUrl() · payLink() · qrDataUrl()` · `newDraft()` |
+| `reminders.js` | `reminderPlan() · queue() · sendReminder()` (FR-6) |
+
+**React layer — `app/src/`:**
+
+| File | Responsibilities |
+|---|---|
+| `App.jsx` | shell, sidebar nav, view routing, keyboard shortcuts, boot (`hydrate()`) |
+| `views/Builder.jsx` | line-item editing, live preview, save / PDF / print (FR-2 · FR-3) |
+| `views/Dashboard.jsx` | KPIs, aging ledger, reminder queue, payment-link QR card (FR-4 · FR-5) |
+| `views/Settings.jsx` | business + invoice settings, Supabase sync, JSON backup |
+| `views/Invoices.jsx` · `Clients.jsx` · `Reminders.jsx` | lifecycle actions · address book · FR-6 queue + log |
 
 ---
 
 ## Quick Start (Local)
 
-**No install, no build, no accounts required.**
+**Option A — run the deployed build (no tooling required).**
 
 ```bash
 git clone https://github.com/aman-code2k26/innova8-gst-invoice-hub.git
 cd innova8-gst-invoice-hub
-open src/index.html            # macOS  (double-clicking also works)
-```
-
-Prefer a local server (avoids any `file://` CDN restrictions):
-
-```bash
-cd src && python3 -m http.server 8080
+python3 -m http.server 8080      # serves the built app from the repo root
 # → http://localhost:8080
 ```
 
-Or with Node:
+**Option B — develop (needs Node 18+).**
 
 ```bash
-npx serve src
+cd app
+npm install
+npm run dev        # Vite dev server with hot reload
+npm run build      # writes ../index.html, ../assets and ../logic
+npm test           # headless boot + click-through smoke test
+npm run verify     # build + test in one go
 ```
 
 **First run** seeds a demo workspace (see next section). Open **Settings → Reset demo data** to re-seed.
-
-**Live site:** https://aman-code2k26.github.io/innova8-gst-invoice-hub/
-
-> Internet is needed only for the 3 CDN libraries (jsPDF, qrcode, supabase-js).
-> If they are blocked, the app still works: PDF falls back to the browser print dialog
-> and the QR area shows a copyable `upi://` link.
-
----
 
 ## Seed Accounts / Demo Data
 
@@ -207,7 +216,7 @@ Instead, the first launch auto-seeds a complete workspace so every feature is de
 ## Configuration / Environment Variables
 
 The app is a static site, so there are **no server-side environment variables**. All configuration is in one
-file — `src/js/supabase-config.js`:
+file — `app/public/logic/supabase-config.js` (copied to `/logic/supabase-config.js` on every build):
 
 ```js
 window.SUPABASE_CONFIG = {
@@ -225,6 +234,7 @@ window.SUPABASE_CONFIG = {
 default HSN/SAC, LUT toggle, brand logo, UPI VPA.
 
 **SQL setup:** run `docs/SUPABASE.sql` once in the Supabase SQL Editor — see `docs/SUPABASE.md`.
+After editing the config file run `cd app && npm run build` so the copy served from the site root is refreshed.
 
 **If you migrate to Next.js / Vercel later**, the same two values become:
 
